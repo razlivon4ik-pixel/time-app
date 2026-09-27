@@ -35,7 +35,7 @@ if st.button("🚀 Wyślij do biura", use_container_width=True):
         }
         
         try:
-            SERVER_URL = "https://ngrok-free.dev"
+            SERVER_URL = "https://onrender.com"
             response = requests.post(SERVER_URL, json=payload)
             
             if response.status_code == 200:
