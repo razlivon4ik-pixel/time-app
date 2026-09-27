@@ -5,7 +5,7 @@ from datetime import date
 st.set_page_config(page_title="Rejestracja Czasu Pracy", layout="centered")
 
 st.markdown("<h2 style='text-align: center;'>🕒 Indywidualny Raport Czasu</h2>", unsafe_allow_html=True)
-st.write("Wypełnij dane. Informacje zostaną przesłane bezpośrednio do serwera w biurze.")
+st.write("Wypełnij dane. Informacje zostaną przesłane bezpośrednio do serwera в мережі.")
 
 emp_id = st.text_input("🔑 Twój numer służbowy (ID)")
 password = st.text_input("🔒 Hasło", type="password")
@@ -38,9 +38,15 @@ if st.button("🚀 Wyślij do biura", use_container_width=True):
             SERVER_URL = "https://onrender.com"
             response = requests.post(SERVER_URL, json=payload)
             
-            if response.status_code == 200:
-                st.success(response.json()["message"])
-            else:
-                st.error(response.json()["detail"])
+            # Безпечно обробляємо відповідь від сервера, щоб додаток не падав
+            try:
+                res_data = response.json()
+                if response.status_code == 200:
+                    st.success(res_data.get("message", "Dane zostały zapisane!"))
+                else:
+                    st.error(res_data.get("detail", "Błąd serwera."))
+            except Exception:
+                st.error(f"❌ Serwer zwrócił błąd (Kod {response.status_code}): {response.text}")
+                
         except requests.exceptions.ConnectionError:
             st.error("❌ Brak połączenia z biurem. Sprawdź internet lub adres serwera.")
