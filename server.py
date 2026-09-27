@@ -4,7 +4,14 @@ import sqlite3
 import os
 
 app = FastAPI()
-
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 REAL_EMPLOYEES = [
     ('DL01', 'x9A2b4', 'David Lyszkowicz'),
     ('ER02', 'm5K7r3', 'Eldar Rajabov'),
