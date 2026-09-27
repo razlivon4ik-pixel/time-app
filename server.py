@@ -1,10 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 import sqlite3
-import os
 
 app = FastAPI()
-from fastapi.middleware.cors import CORSMiddleware
+
+# Дозволяємо підключення з будь-яких смартфонів та хмарних додатків
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -12,6 +13,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 REAL_EMPLOYEES = [
     ('DL01', 'x9A2b4', 'David Lyszkowicz'),
     ('ER02', 'm5K7r3', 'Eldar Rajabov'),
@@ -36,18 +38,15 @@ REAL_EMPLOYEES = [
     ('AM21', 'z6R3p8', 'Artem Marochkin')
 ]
 
-# Автоматичне створення та заповнення бази даних при запуску сервера
 def init_db():
     conn = sqlite3.connect("office_data.db")
     cursor = conn.cursor()
     cursor.execute("CREATE TABLE IF NOT EXISTS employees (emp_id TEXT PRIMARY KEY, password TEXT, fullname TEXT)")
     cursor.execute("CREATE TABLE IF NOT EXISTS time_logs (emp_id TEXT, fullname TEXT, date TEXT, status TEXT, hours REAL)")
     
-    # Перевіряємо, чи база пуста, якщо так - додаємо людей
     cursor.execute("SELECT COUNT(*) FROM employees")
     if cursor.fetchone()[0] == 0:
         cursor.executemany("INSERT INTO employees VALUES (?, ?, ?)", REAL_EMPLOYEES)
-        print("Базу працівників успішно заповнено автоматично!")
     conn.commit()
     conn.close()
 
@@ -65,7 +64,6 @@ def submit_time(data: LogSchema):
     conn = sqlite3.connect("office_data.db")
     cursor = conn.cursor()
     
-    # Валідація користувача (великі літери)
     cursor.execute("SELECT fullname FROM employees WHERE emp_id = ? AND password = ?", (data.emp_id.upper(), data.password))
     user = cursor.fetchone()
     
@@ -73,9 +71,9 @@ def submit_time(data: LogSchema):
         conn.close()
         raise HTTPException(status_code=400, detail="Błędny identyfikator (ID) lub hasło!")
     
+    # Витягуємо саме текст імені з кортежу
     fullname = user[0]
     
-    # Зберігаємо звіт робочого часу
     cursor.execute("INSERT INTO time_logs VALUES (?, ?, ?, ?, ?)", 
                    (data.emp_id.upper(), fullname, data.date, data.status, data.hours))
     conn.commit()
